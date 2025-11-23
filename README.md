@@ -17,7 +17,7 @@ A **web-based Personal Finance Dashboard** to help you **track income, expenses,
 - ✅ Visual charts (bar/pie) for expense analysis.
 - ✅ Responsive and mobile-friendly design.
 - ✅ Search, filter, and sort transactions.
-- ✅ Dark mode toggle (optional).
+- ✅ Dark mode toggle.
 - ✅ Save data locally using `LocalStorage`.
 
 ---
@@ -25,9 +25,6 @@ A **web-based Personal Finance Dashboard** to help you **track income, expenses,
 ## 💻 Live Demo
 
 > You can host your project on GitHub Pages for a live demo.
-
-```text
-https://username.github.io/personal-finance-dashboard/
 
 ## 🛠 Technologies Used
 
@@ -59,3 +56,14 @@ personal-finance-dashboard/
 ![Charts Screenshot](screenshots/charts.png)
 
 > Replace these images with actual screenshots from your project. Put them in a `screenshots` folder.
+
+## 🤝 Contributing
+
+Pull requests are welcome.  
+For major changes, please open an issue first.
+
+---
+
+## 📝 License
+
+This project is licensed under the **MIT License**.
