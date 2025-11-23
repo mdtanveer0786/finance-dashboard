@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Finance Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header>
+      <h1>💰 Personal Finance Dashboard</h1>
+      <button id="themeToggle">🌙</button>
+    </header>
+
+    <section class="top-cards">
+      <div class="card">
+        <h3>Total Income</h3>
+        <p id="incomeValue">₹0</p>
+      </div>
+
+      <div class="card">
+        <h3>Total Expenses</h3>
+        <p id="expenseValue">₹0</p>
+      </div>
+
+      <div class="card balance">
+        <h3>Balance</h3>
+        <p id="balanceValue">₹0</p>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>Add Transaction</h2>
+
+      <input type="text" id="title" placeholder="Title (Salary, Food, etc)">
+      <input type="number" id="amount" placeholder="Amount">
+
+      <select id="type">
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+
+      <select id="category">
+        <option>Food</option>
+        <option>Shopping</option>
+        <option>Travel</option>
+        <option>Rent</option>
+        <option>Salary</option>
+        <option>Other</option>
+      </select>
+
+      <button id="addBtn">Add</button>
+    </section>
+
+    <section class="charts">
+
+      <div class="chart-box">
+        <h3>Expense Breakdown</h3>
+        <canvas id="pieChart"></canvas>
+      </div>
+
+      <div class="chart-box">
+        <h3>Monthly Comparison</h3>
+        <canvas id="barChart"></canvas>
+      </div>
+
+    </section>
+
+    <section class="transactions">
+      <h2>All Transactions</h2>
+      <ul id="list"></ul>
+
+      <button id="exportCSV">⬇ Export CSV</button>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
