@@ -1,3 +1,4 @@
+
 # Personal Finance Dashboard
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -58,12 +59,3 @@ personal-finance-dashboard/
 ![Charts Screenshot](screenshots/charts.png)
 
 > Replace these images with actual screenshots from your project. Put them in a `screenshots` folder.
-
----
-
-## ⚡ How to Use
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/username/personal-finance-dashboard.git
