@@ -24,7 +24,10 @@ A **web-based Personal Finance Dashboard** to help you **track income, expenses,
 
 ## 💻 Live Demo
 
-> You can host your project on GitHub Pages for a live demo.
+Experience the project live on Netlify:
+
+👉 **https://financee-dashboard.netlify.app/**
+
 
 ## 🛠 Technologies Used
 
