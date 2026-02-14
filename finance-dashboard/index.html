@@ -3,102 +3,823 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description"
-    content="Personal Finance Dashboard - Track income, expenses, and manage your finances efficiently">
-  <meta name="theme-color" content="#4b6cb7">
-  <title>Personal Finance Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <meta name="description" content="WealthWise - Modern Personal Finance Dashboard with Analytics & Reports">
+  <meta name="theme-color" content="#6366f1">
+
+  <title>WealthWise | Modern Finance Dashboard</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+  <!-- Mobile Menu Overlay -->
+  <div class="overlay" id="overlay"></div>
 
-  <div class="container">
+  <!-- App Container -->
+  <div class="app">
 
-    <header>
-      <h1>💰 Personal Finance Dashboard</h1>
-      <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
-    </header>
-
-    <section class="top-cards">
-      <div class="card income-card">
-        <div class="card-icon">💵</div>
-        <h3>Total Income</h3>
-        <p id="incomeValue">₹0</p>
-      </div>
-
-      <div class="card expense-card">
-        <div class="card-icon">💸</div>
-        <h3>Total Expenses</h3>
-        <p id="expenseValue">₹0</p>
-      </div>
-
-      <div class="card balance-card">
-        <div class="card-icon">💰</div>
-        <h3>Balance</h3>
-        <p id="balanceValue">₹0</p>
-      </div>
-    </section>
-
-    <section class="form-section">
-      <h2>✏️ Add New Transaction</h2>
-      <form id="transactionForm" class="form-grid">
-        <div class="form-group">
-          <input type="text" id="title" placeholder="Transaction Title" required aria-label="Transaction title">
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="logo-text">
+            <h2>Wealth<span>Wise</span></h2>
+            <span class="badge">v2.0</span>
+          </div>
         </div>
-        <div class="form-group">
-          <input type="number" id="amount" placeholder="Amount" step="0.01" min="0" required aria-label="Amount">
-        </div>
-
-        <div class="form-group">
-          <select id="type" required aria-label="Transaction type">
-            <option value="income">📈 Income</option>
-            <option value="expense">📉 Expense</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <select id="category" required aria-label="Category">
-            <option value="">-- Select Category --</option>
-            <option value="Food">🍔 Food</option>
-            <option value="Shopping">🛍️ Shopping</option>
-            <option value="Travel">✈️ Travel</option>
-            <option value="Rent">🏠 Rent</option>
-            <option value="Salary">💼 Salary</option>
-            <option value="Other">📌 Other</option>
-          </select>
-        </div>
-
-        <button type="submit" id="addBtn" class="btn-submit">➕ Add Transaction</button>
-      </form>
-    </section>
-
-    <section class="charts">
-
-      <div class="chart-box">
-        <h3>Expense Breakdown</h3>
-        <canvas id="pieChart"></canvas>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
 
-      <div class="chart-box">
-        <h3>Monthly Comparison</h3>
-        <canvas id="barChart"></canvas>
+      <div class="user-profile">
+        <img src="https://ui-avatars.com/api/?name=Alex+Morgan&background=6366f1&color=fff&size=60&bold=true"
+          alt="User">
+        <div class="user-info">
+          <h4>Alex Morgan</h4>
+          <p>alex@wealthwise.com</p>
+          <span class="membership">Premium Member</span>
+        </div>
       </div>
 
-    </section>
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="active">
+            <a href="#" data-page="dashboard">
+              <i class="fas fa-th-large"></i>
+              <span>Dashboard</span>
+              <span class="nav-badge">Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="transactions">
+              <i class="fas fa-exchange-alt"></i>
+              <span>Transactions</span>
+              <span class="nav-badge" id="transactionCount">0</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="analytics">
+              <i class="fas fa-chart-pie"></i>
+              <span>Analytics</span>
+              <span class="nav-badge">Insights</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="budget">
+              <i class="fas fa-wallet"></i>
+              <span>Budget</span>
+              <span class="nav-badge">Planner</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="goals">
+              <i class="fas fa-bullseye"></i>
+              <span>Goals</span>
+              <span class="nav-badge">Savings</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="reports">
+              <i class="fas fa-file-invoice"></i>
+              <span>Reports</span>
+              <span class="nav-badge">PDF</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="settings">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+              <span class="nav-badge">Config</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
-    <section class="transactions">
-      <div class="transactions-header">
-        <h2>📋 All Transactions</h2>
-        <button id="exportCSV" class="export-btn" aria-label="Export transactions to CSV">⬇ Export CSV</button>
+      <div class="sidebar-footer">
+        <div class="progress-card">
+          <h4>Monthly Goal</h4>
+          <div class="progress-info">
+            <span id="goalProgressText">₹0 / ₹50,000</span>
+            <span id="goalPercentage">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="goalProgress" style="width: 0%"></div>
+          </div>
+        </div>
       </div>
-      <ul id="list" role="list" aria-label="Transactions list"></ul>
-      <p id="emptyState" class="empty-state">💭 No transactions yet. Add one to get started!</p>
-    </section>
+    </aside>
 
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content" id="mainContent">
+
+      <!-- ========== TOP HEADER ========== -->
+      <header class="top-header">
+        <button class="menu-toggle" id="menuToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="page-title">
+          <h1 id="pageTitle">Dashboard</h1>
+          <div class="breadcrumb">
+            <span>Home</span>
+            <i class="fas fa-chevron-right"></i>
+            <span id="currentPage">Dashboard</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search transactions...">
+          </div>
+
+          <button class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- ========== DASHBOARD PAGE ========== -->
+      <div id="dashboard" class="page active">
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+          <div class="banner-content">
+            <h2>Good evening, Alex! 👋</h2>
+            <p>Here's your financial summary for today</p>
+          </div>
+          <div class="banner-stats">
+            <div class="banner-stat">
+              <span>Today's Spending</span>
+              <strong id="todaySpending">₹0</strong>
+            </div>
+            <div class="banner-stat">
+              <span>Monthly Budget</span>
+              <strong id="monthlyBudgetLeft">₹50,000</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card income">
+            <div class="stat-icon">
+              <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Income</span>
+              <h3 class="stat-value" id="totalIncome">₹0</h3>
+              <span class="stat-change" id="incomeChange">+0%</span>
+            </div>
+            <div class="stat-chart" id="incomeSparkline"></div>
+          </div>
+
+          <div class="stat-card expense">
+            <div class="stat-icon">
+              <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Expenses</span>
+              <h3 class="stat-value" id="totalExpense">₹0</h3>
+              <span class="stat-change" id="expenseChange">-0%</span>
+            </div>
+            <div class="stat-chart" id="expenseSparkline"></div>
+          </div>
+
+          <div class="stat-card balance">
+            <div class="stat-icon">
+              <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Current Balance</span>
+              <h3 class="stat-value" id="totalBalance">₹0</h3>
+              <span class="stat-badge" id="balanceStatus">Healthy</span>
+            </div>
+          </div>
+
+          <div class="stat-card savings">
+            <div class="stat-icon">
+              <i class="fas fa-piggy-bank"></i>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Savings</span>
+              <h3 class="stat-value" id="totalSavings">₹0</h3>
+              <span class="stat-badge" id="savingsRate">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Transaction Form - Compact -->
+        <div class="add-transaction-compact">
+          <form id="quickAddForm">
+            <input type="text" id="quickTitle" placeholder="Transaction name...">
+            <input type="number" id="quickAmount" placeholder="Amount (₹)" step="0.01" min="0">
+            <select id="quickType">
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <button type="submit" class="btn-quick">
+              <i class="fas fa-plus"></i>
+            </button>
+          </form>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h4>Expense Breakdown</h4>
+              <select class="chart-period" id="piePeriod">
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="pieChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h4>Income vs Expense</h4>
+              <select class="chart-period" id="barPeriod">
+                <option value="6">Last 6 Months</option>
+                <option value="12">Last 12 Months</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="barChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions & Insights -->
+        <div class="dashboard-grid">
+          <div class="recent-transactions-card">
+            <div class="card-header">
+              <h4>Recent Transactions</h4>
+              <button class="view-all" data-page="transactions">
+                View All <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+            <div class="transactions-list" id="recentTransactionsList"></div>
+            <div class="empty-state" id="dashboardEmptyState">
+              <i class="fas fa-receipt"></i>
+              <p>No transactions yet</p>
+            </div>
+          </div>
+
+          <div class="insights-card">
+            <div class="card-header">
+              <h4>AI Insights</h4>
+              <i class="fas fa-robot"></i>
+            </div>
+            <div class="insights-list" id="insightsList">
+              <div class="insight-item">
+                <i class="fas fa-lightbulb"></i>
+                <p>Add transactions to get personalized insights</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== TRANSACTIONS PAGE ========== -->
+      <div id="transactions" class="page">
+        <div class="page-header">
+          <h2>All Transactions</h2>
+          <div class="page-actions">
+            <button class="btn-export" id="exportBtn">
+              <i class="fas fa-download"></i>
+              Export
+            </button>
+            <button class="btn-import" id="importBtn">
+              <i class="fas fa-upload"></i>
+              Import
+            </button>
+          </div>
+        </div>
+
+        <div class="filters-bar">
+          <div class="filter-group">
+            <select id="filterType" class="filter-select">
+              <option value="all">All Types</option>
+              <option value="income">Income Only</option>
+              <option value="expense">Expense Only</option>
+            </select>
+
+            <select id="filterCategory" class="filter-select">
+              <option value="all">All Categories</option>
+              <option value="Food">🍔 Food</option>
+              <option value="Shopping">🛍️ Shopping</option>
+              <option value="Transport">🚗 Transport</option>
+              <option value="Entertainment">🎬 Entertainment</option>
+              <option value="Healthcare">🏥 Healthcare</option>
+              <option value="Education">📚 Education</option>
+              <option value="Bills">💡 Bills</option>
+              <option value="Salary">💼 Salary</option>
+              <option value="Investment">📈 Investment</option>
+              <option value="Other">📌 Other</option>
+            </select>
+
+            <input type="date" id="filterDate" class="filter-date">
+          </div>
+
+          <div class="filter-stats">
+            <span id="filteredCount">0 transactions</span>
+            <button class="clear-filters" id="clearFilters">Clear</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th>Transaction</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Payment</th>
+                <th>Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="allTransactionsList"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination" id="pagination">
+          <button class="page-btn" id="prevPage" disabled>
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span id="pageInfo">Page 1 of 1</span>
+          <button class="page-btn" id="nextPage" disabled>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ========== ANALYTICS PAGE ========== -->
+      <div id="analytics" class="page">
+        <div class="page-header">
+          <h2>Financial Analytics</h2>
+          <div class="date-range">
+            <select id="analyticsRange">
+              <option value="7">Last 7 Days</option>
+              <option value="30" selected>Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
+              <option value="365">Last Year</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Analytics Cards -->
+        <div class="analytics-grid">
+          <div class="analytics-card">
+            <div class="analytics-icon income">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="analytics-details">
+              <span class="analytics-label">Average Daily Expense</span>
+              <h3 class="analytics-value" id="avgDailyExpense">₹0</h3>
+              <span class="analytics-trend" id="expenseTrend">vs last period</span>
+            </div>
+          </div>
+
+          <div class="analytics-card">
+            <div class="analytics-icon expense">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="analytics-details">
+              <span class="analytics-label">Most Active Day</span>
+              <h3 class="analytics-value" id="mostActiveDay">-</h3>
+              <span class="analytics-trend" id="activeDayTransactions">0 transactions</span>
+            </div>
+          </div>
+
+          <div class="analytics-card">
+            <div class="analytics-icon balance">
+              <i class="fas fa-tag"></i>
+            </div>
+            <div class="analytics-details">
+              <span class="analytics-label">Top Category</span>
+              <h3 class="analytics-value" id="topCategory">-</h3>
+              <span class="analytics-trend" id="topCategoryAmount">₹0</span>
+            </div>
+          </div>
+
+          <div class="analytics-card">
+            <div class="analytics-icon savings">
+              <i class="fas fa-percent"></i>
+            </div>
+            <div class="analytics-details">
+              <span class="analytics-label">Savings Rate</span>
+              <h3 class="analytics-value" id="savingsRateAnalytics">0%</h3>
+              <span class="analytics-trend" id="savingsTrend">of income</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Charts -->
+        <div class="analytics-charts">
+          <div class="chart-card full-width">
+            <div class="chart-header">
+              <h4>Spending Pattern</h4>
+              <div class="chart-legend">
+                <span class="legend-item"><span class="color-box" style="background: #6366f1"></span> Income</span>
+                <span class="legend-item"><span class="color-box" style="background: #ef4444"></span> Expense</span>
+              </div>
+            </div>
+            <div class="chart-container" style="height: 400px">
+              <canvas id="analyticsChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Analysis -->
+        <div class="category-analysis">
+          <h4>Category Analysis</h4>
+          <div class="category-grid" id="categoryAnalysis"></div>
+        </div>
+      </div>
+
+      <!-- ========== BUDGET PAGE ========== -->
+      <div id="budget" class="page">
+        <div class="page-header">
+          <h2>Budget Planner</h2>
+          <button class="btn-primary" id="addBudgetBtn">
+            <i class="fas fa-plus"></i>
+            Create Budget
+          </button>
+        </div>
+
+        <div class="budget-summary">
+          <div class="summary-card">
+            <h3>Monthly Budget</h3>
+            <div class="summary-value">₹50,000</div>
+            <div class="summary-progress">
+              <div class="progress-bar large">
+                <div class="progress-fill" id="totalBudgetProgress" style="width: 0%"></div>
+              </div>
+              <span id="budgetSpent">₹0 spent</span>
+            </div>
+          </div>
+          <div class="summary-card">
+            <h3>Remaining</h3>
+            <div class="summary-value" id="budgetRemaining">₹50,000</div>
+            <span id="budgetDaysLeft">30 days left</span>
+          </div>
+        </div>
+
+        <div class="budget-grid" id="budgetList">
+          <!-- Budget items will be added here -->
+        </div>
+      </div>
+
+      <!-- ========== GOALS PAGE ========== -->
+      <div id="goals" class="page">
+        <div class="page-header">
+          <h2>Savings Goals</h2>
+          <button class="btn-primary" id="addGoalBtn">
+            <i class="fas fa-plus"></i>
+            New Goal
+          </button>
+        </div>
+
+        <div class="goals-grid" id="goalsList">
+          <div class="goal-card">
+            <div class="goal-icon emergency">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="goal-details">
+              <h4>Emergency Fund</h4>
+              <p>₹6,500 of ₹10,000</p>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 65%"></div>
+              </div>
+            </div>
+            <span class="goal-percentage">65%</span>
+          </div>
+
+          <div class="goal-card">
+            <div class="goal-icon vacation">
+              <i class="fas fa-umbrella-beach"></i>
+            </div>
+            <div class="goal-details">
+              <h4>Vacation</h4>
+              <p>₹2,300 of ₹5,000</p>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 46%"></div>
+              </div>
+            </div>
+            <span class="goal-percentage">46%</span>
+          </div>
+
+          <div class="goal-card">
+            <div class="goal-icon car">
+              <i class="fas fa-car"></i>
+            </div>
+            <div class="goal-details">
+              <h4>New Car</h4>
+              <p>₹8,500 of ₹25,000</p>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 34%"></div>
+              </div>
+            </div>
+            <span class="goal-percentage">34%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== REPORTS PAGE ========== -->
+      <div id="reports" class="page">
+        <div class="page-header">
+          <h2>Financial Reports</h2>
+          <button class="btn-primary" id="generateReportBtn">
+            <i class="fas fa-file-pdf"></i>
+            Generate Report
+          </button>
+        </div>
+
+        <div class="reports-grid">
+          <div class="report-card">
+            <div class="report-icon">
+              <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="report-details">
+              <h4>Monthly Summary</h4>
+              <p>January 2024</p>
+            </div>
+            <button class="report-download">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+
+          <div class="report-card">
+            <div class="report-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="report-details">
+              <h4>Quarterly Analysis</h4>
+              <p>Q4 2023</p>
+            </div>
+            <button class="report-download">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+
+          <div class="report-card">
+            <div class="report-icon">
+              <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="report-details">
+              <h4>Tax Report</h4>
+              <p>FY 2023-24</p>
+            </div>
+            <button class="report-download">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+
+          <div class="report-card">
+            <div class="report-icon">
+              <i class="fas fa-pie-chart"></i>
+            </div>
+            <div class="report-details">
+              <h4>Category Analysis</h4>
+              <p>All time</p>
+            </div>
+            <button class="report-download">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="reports-options">
+          <h3>Custom Report</h3>
+          <div class="custom-report-form">
+            <select id="reportType">
+              <option value="income">Income Report</option>
+              <option value="expense">Expense Report</option>
+              <option value="both">Complete Report</option>
+            </select>
+            <input type="month" id="reportMonth">
+            <button class="btn-primary" id="generateCustomReport">
+              Generate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SETTINGS PAGE ========== -->
+      <div id="settings" class="page">
+        <div class="page-header">
+          <h2>Settings</h2>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Profile Settings -->
+          <div class="settings-card">
+            <h3>Profile Information</h3>
+            <div class="settings-form">
+              <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" id="displayName" value="Alex Morgan">
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="displayEmail" value="alex@wealthwise.com">
+              </div>
+              <button class="btn-save" id="saveProfile">Save Changes</button>
+            </div>
+          </div>
+
+          <!-- Preferences -->
+          <div class="settings-card">
+            <h3>Preferences</h3>
+            <div class="settings-options">
+              <div class="settings-option">
+                <span>Dark Mode</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="darkModeToggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-option">
+                <span>Currency</span>
+                <select id="currencySelect" disabled>
+                  <option value="INR" selected>Indian Rupee (₹)</option>
+                </select>
+              </div>
+              <div class="settings-option">
+                <span>First Day of Week</span>
+                <select id="weekStart">
+                  <option value="0">Sunday</option>
+                  <option value="1" selected>Monday</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="settings-card">
+            <h3>Notifications</h3>
+            <div class="settings-options">
+              <div class="settings-option">
+                <span>Budget Alerts</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="budgetAlerts" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-option">
+                <span>Monthly Reports</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="monthlyReports" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-option">
+                <span>Goal Reminders</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="goalReminders" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Management -->
+          <div class="settings-card">
+            <h3>Data Management</h3>
+            <div class="settings-actions">
+              <button class="btn-export" id="exportDataBtn">
+                <i class="fas fa-download"></i>
+                Export Data
+              </button>
+              <button class="btn-import" id="importDataBtn">
+                <i class="fas fa-upload"></i>
+                Import Data
+              </button>
+              <button class="btn-danger" id="resetDataBtn">
+                <i class="fas fa-exclamation-triangle"></i>
+                Reset All Data
+              </button>
+            </div>
+          </div>
+
+          <!-- About -->
+          <div class="settings-card about-card">
+            <h3>About WealthWise</h3>
+            <p>Version 2.0.0</p>
+            <p>Made with ❤️ in India</p>
+            <div class="social-links">
+              <a href="#"><i class="fab fa-github"></i></a>
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div class="toast" id="toast"></div>
+
+      <!-- Floating Action Button -->
+      <button class="fab" id="fabBtn" title="Quick Add">
+        <i class="fas fa-plus"></i>
+      </button>
+
+      <!-- Quick Add Modal -->
+      <div class="modal" id="quickAddModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Add Transaction</h3>
+            <button class="close-modal" id="closeModal">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="modalForm">
+              <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="modalTitle" placeholder="e.g., Salary, Groceries..." required>
+              </div>
+              <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="modalAmount" placeholder="0.00" step="0.01" min="0" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Type</label>
+                  <select id="modalType">
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Category</label>
+                  <select id="modalCategory" required>
+                    <option value="">Select</option>
+                    <option value="Food">🍔 Food</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Transport">🚗 Transport</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Healthcare">🏥 Healthcare</option>
+                    <option value="Education">📚 Education</option>
+                    <option value="Bills">💡 Bills</option>
+                    <option value="Salary">💼 Salary</option>
+                    <option value="Investment">📈 Investment</option>
+                    <option value="Other">📌 Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Date</label>
+                  <input type="date" id="modalDate" required>
+                </div>
+                <div class="form-group">
+                  <label>Payment</label>
+                  <select id="modalPayment">
+                    <option value="cash">💵 Cash</option>
+                    <option value="card">💳 Card</option>
+                    <option value="upi">📱 UPI</option>
+                    <option value="bank">🏦 Bank</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary modal-submit">
+                <i class="fas fa-plus"></i>
+                Add Transaction
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </main>
   </div>
 
+  <!-- JavaScript -->
   <script src="script.js"></script>
 </body>
 
