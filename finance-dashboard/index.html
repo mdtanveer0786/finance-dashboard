@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Personal Finance Dashboard - Track income, expenses, and manage your finances efficiently">
+  <meta name="theme-color" content="#4b6cb7">
   <title>Personal Finance Dashboard</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
 </head>
 
 <body>
@@ -14,47 +18,60 @@
 
     <header>
       <h1>💰 Personal Finance Dashboard</h1>
-      <button id="themeToggle">🌙</button>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
     </header>
 
     <section class="top-cards">
-      <div class="card">
+      <div class="card income-card">
+        <div class="card-icon">💵</div>
         <h3>Total Income</h3>
         <p id="incomeValue">₹0</p>
       </div>
 
-      <div class="card">
+      <div class="card expense-card">
+        <div class="card-icon">💸</div>
         <h3>Total Expenses</h3>
         <p id="expenseValue">₹0</p>
       </div>
 
-      <div class="card balance">
+      <div class="card balance-card">
+        <div class="card-icon">💰</div>
         <h3>Balance</h3>
         <p id="balanceValue">₹0</p>
       </div>
     </section>
 
     <section class="form-section">
-      <h2>Add Transaction</h2>
+      <h2>✏️ Add New Transaction</h2>
+      <form id="transactionForm" class="form-grid">
+        <div class="form-group">
+          <input type="text" id="title" placeholder="Transaction Title" required aria-label="Transaction title">
+        </div>
+        <div class="form-group">
+          <input type="number" id="amount" placeholder="Amount" step="0.01" min="0" required aria-label="Amount">
+        </div>
 
-      <input type="text" id="title" placeholder="Title (Salary, Food, etc)">
-      <input type="number" id="amount" placeholder="Amount">
+        <div class="form-group">
+          <select id="type" required aria-label="Transaction type">
+            <option value="income">📈 Income</option>
+            <option value="expense">📉 Expense</option>
+          </select>
+        </div>
 
-      <select id="type">
-        <option value="income">Income</option>
-        <option value="expense">Expense</option>
-      </select>
+        <div class="form-group">
+          <select id="category" required aria-label="Category">
+            <option value="">-- Select Category --</option>
+            <option value="Food">🍔 Food</option>
+            <option value="Shopping">🛍️ Shopping</option>
+            <option value="Travel">✈️ Travel</option>
+            <option value="Rent">🏠 Rent</option>
+            <option value="Salary">💼 Salary</option>
+            <option value="Other">📌 Other</option>
+          </select>
+        </div>
 
-      <select id="category">
-        <option>Food</option>
-        <option>Shopping</option>
-        <option>Travel</option>
-        <option>Rent</option>
-        <option>Salary</option>
-        <option>Other</option>
-      </select>
-
-      <button id="addBtn">Add</button>
+        <button type="submit" id="addBtn" class="btn-submit">➕ Add Transaction</button>
+      </form>
     </section>
 
     <section class="charts">
@@ -72,14 +89,17 @@
     </section>
 
     <section class="transactions">
-      <h2>All Transactions</h2>
-      <ul id="list"></ul>
-
-      <button id="exportCSV">⬇ Export CSV</button>
+      <div class="transactions-header">
+        <h2>📋 All Transactions</h2>
+        <button id="exportCSV" class="export-btn" aria-label="Export transactions to CSV">⬇ Export CSV</button>
+      </div>
+      <ul id="list" role="list" aria-label="Transactions list"></ul>
+      <p id="emptyState" class="empty-state">💭 No transactions yet. Add one to get started!</p>
     </section>
 
   </div>
 
   <script src="script.js"></script>
 </body>
+
 </html>
