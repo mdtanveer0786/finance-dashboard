@@ -54,12 +54,19 @@
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  /* Premium Pro Shadows (Stripe/Vercel style) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.025);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.025);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+  /* Glassmorphism Backdrop */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-dark-bg: rgba(30, 41, 59, 0.85);
+  --glass-dark-border: rgba(255, 255, 255, 0.05);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -418,15 +425,20 @@ body.dark {
   justify-content: space-between;
   margin-bottom: var(--space-xl);
   padding: var(--space-md) var(--space-lg);
-  background: white;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: var(--space-lg);
+  z-index: 50;
 }
 
 .dark .top-header {
-  background: var(--dark-surface);
-  border-color: var(--dark-border);
+  background: var(--glass-dark-bg);
+  border-color: var(--glass-dark-border);
 }
 
 .menu-toggle {
@@ -646,17 +658,20 @@ body.dark {
   gap: var(--space-md);
   position: relative;
   overflow: hidden;
-  transition: all var(--transition-base);
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
 }
 
 .dark .stat-card {
   background: var(--dark-surface);
-  border-color: var(--dark-border);
+  border-color: var(--glass-dark-border);
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl);
 }
 
 .stat-icon {
@@ -738,16 +753,16 @@ body.dark {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 9999;
   display: none;
   align-items: center;
   justify-content: center;
   padding: 20px;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal.show {
@@ -762,8 +777,8 @@ body.dark {
   max-width: 550px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-  transform: scale(0.9) translateY(20px);
+  box-shadow: var(--shadow-glass), var(--shadow-xl);
+  transform: scale(0.95) translateY(10px);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
@@ -774,8 +789,9 @@ body.dark {
 
 /* Dark Mode */
 body.dark .modal-content {
-  background: #1e293b;
+  background: var(--dark-surface);
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--glass-dark-border);
 }
 
 /* Modal Header */

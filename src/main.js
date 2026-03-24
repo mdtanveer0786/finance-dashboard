@@ -27,6 +27,22 @@ let filteredTransactions = [];
 let charts = {};
 let editingTransactionId = null;
 
+// ========== PRO-LEVEL CHART DEFAULTS ==========
+Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.scale.grid.color = 'rgba(148, 163, 184, 0.1)';
+Chart.defaults.scale.grid.borderColor = 'transparent';
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+Chart.defaults.plugins.tooltip.titleFont = {
+  size: 13,
+  family: "'Inter', sans-serif",
+  weight: 'bold'
+};
+Chart.defaults.plugins.tooltip.bodyFont = { size: 13, family: "'Inter', sans-serif" };
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.elements.arc.borderWidth = 0;
+
 // ========== DOM ELEMENTS ==========
 const elements = {
   // Sidebar
@@ -886,7 +902,10 @@ function calculateTotals() {
 }
 
 function formatNumber(num) {
-  return num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+  return new Intl.NumberFormat('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(num);
 }
 
 // ========== RENDER TRANSACTIONS ==========
