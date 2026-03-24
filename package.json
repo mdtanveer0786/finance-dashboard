@@ -1,0 +1,33 @@
+{
+  "name": "personal-finance-dashboard",
+  "version": "1.0.0",
+  "description": "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\r [![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)\r [![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)\r [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{js,css}\" \"*.html\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdtanveer0786/finance-dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mdtanveer0786/finance-dashboard/issues"
+  },
+  "homepage": "https://github.com/mdtanveer0786/finance-dashboard#readme",
+  "devDependencies": {
+    "prettier": "^3.8.1",
+    "vite": "^6.0.0",
+    "vite-plugin-pwa": "^0.21.0",
+    "workbox-window": "^7.4.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1"
+  }
+}

@@ -1,3 +1,5 @@
+import Chart from 'chart.js/auto';
+
 /**
  * ============================================
  * WEALTHWISE - MODERN FINANCE DASHBOARD
@@ -17,9 +19,13 @@ const CONFIG = {
 
 // ========== APP STATE ==========
 let transactions = [];
+let budgets = [];
+let goals = [];
+let profile = { name: 'User', email: '' };
 let currentPage = 1;
 let filteredTransactions = [];
 let charts = {};
+let editingTransactionId = null;
 
 // ========== DOM ELEMENTS ==========
 const elements = {
@@ -30,6 +36,10 @@ const elements = {
   overlay: document.getElementById('overlay'),
   navLinks: document.querySelectorAll('.sidebar-nav a'),
   transactionCount: document.getElementById('transactionCount'),
+  sidebarAvatar: document.querySelector('.user-profile img'),
+  sidebarUserName: document.querySelector('.user-info h4'),
+  sidebarUserEmail: document.querySelector('.user-info p'),
+  welcomeName: document.querySelector('.banner-content h2'),
 
   // Pages
   pages: document.querySelectorAll('.page'),
@@ -98,6 +108,7 @@ const elements = {
   totalBudgetProgress: document.getElementById('totalBudgetProgress'),
   budgetSpent: document.getElementById('budgetSpent'),
   budgetRemaining: document.getElementById('budgetRemaining'),
+  totalBudgetValue: document.getElementById('totalBudgetValue'),
   budgetList: document.getElementById('budgetList'),
   addBudgetBtn: document.getElementById('addBudgetBtn'),
 
@@ -142,6 +153,22 @@ const elements = {
   modalCategory: document.getElementById('modalCategory'),
   modalDate: document.getElementById('modalDate'),
   modalPayment: document.getElementById('modalPayment'),
+  modalSubmitBtn: document.querySelector('.modal-submit'),
+
+  // Budget Modal
+  addBudgetModal: document.getElementById('addBudgetModal'),
+  closeBudgetModal: document.getElementById('closeBudgetModal'),
+  budgetForm: document.getElementById('budgetForm'),
+  budgetCategory: document.getElementById('budgetCategory'),
+  budgetAmount: document.getElementById('budgetAmount'),
+
+  // Goal Modal
+  addGoalModal: document.getElementById('addGoalModal'),
+  closeGoalModal: document.getElementById('closeGoalModal'),
+  goalForm: document.getElementById('goalForm'),
+  goalTitle: document.getElementById('goalTitle'),
+  goalAmount: document.getElementById('goalAmount'),
+  goalIcon: document.getElementById('goalIcon'),
 
   // Toast
   toast: document.getElementById('toast')
@@ -158,27 +185,50 @@ document.addEventListener('DOMContentLoaded', () => {
   updateTransactionCount();
   updateGoalProgress();
   generateInsights();
+  renderBudgets();
+  renderGoals();
 });
 
 function loadData() {
   try {
     const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-    transactions = saved ? JSON.parse(saved) : [];
+    const parsed = saved ? JSON.parse(saved) : null;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      transactions = parsed.transactions || [];
+      budgets = parsed.budgets || [];
+      goals = parsed.goals || [];
+      if (parsed.profile) profile = parsed.profile;
+    } else {
+      // Legacy support for when only transactions array was saved
+      transactions = Array.isArray(parsed) ? parsed : [];
+      budgets = [];
+      goals = [];
+    }
     filteredTransactions = [...transactions];
   } catch (error) {
     console.error('Error loading data:', error);
     transactions = [];
+    budgets = [];
+    goals = [];
     filteredTransactions = [];
   }
 }
 
 function saveData() {
   try {
-    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(transactions));
+    const dataToSave = {
+      transactions,
+      budgets,
+      goals,
+      profile
+    };
+    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(dataToSave));
     updateUI();
     updateTransactionCount();
     updateGoalProgress();
     generateInsights();
+    renderBudgets();
+    renderGoals();
     if (elements.analyticsRange) updateAnalytics();
     if (elements.filterType) applyFilters();
   } catch (error) {
@@ -195,7 +245,7 @@ function setupEventListeners() {
   elements.overlay?.addEventListener('click', closeSidebar);
 
   // Navigation
-  elements.navLinks.forEach(link => {
+  elements.navLinks.forEach((link) => {
     link.addEventListener('click', handleNavigation);
   });
 
@@ -227,7 +277,7 @@ function setupEventListeners() {
   elements.resetDataBtn?.addEventListener('click', resetAllData);
 
   // View All buttons
-  elements.viewAllBtn.forEach(btn => {
+  elements.viewAllBtn.forEach((btn) => {
     btn.addEventListener('click', () => switchPage('transactions'));
   });
 
@@ -237,10 +287,14 @@ function setupEventListeners() {
   elements.analyticsRange?.addEventListener('change', updateAnalytics);
 
   // Budget
-  elements.addBudgetBtn?.addEventListener('click', () => showToast('Budget feature coming soon!', 'info'));
+  elements.addBudgetBtn?.addEventListener('click', openBudgetModal);
+  elements.closeBudgetModal?.addEventListener('click', closeBudgetModal);
+  elements.budgetForm?.addEventListener('submit', handleBudgetSubmit);
 
   // Goals
-  elements.addGoalBtn?.addEventListener('click', () => showToast('Goals feature coming soon!', 'info'));
+  elements.addGoalBtn?.addEventListener('click', openGoalModal);
+  elements.closeGoalModal?.addEventListener('click', closeGoalModal);
+  elements.goalForm?.addEventListener('submit', handleGoalSubmit);
 
   // Reports
   elements.generateReportBtn?.addEventListener('click', generateReport);
@@ -254,17 +308,19 @@ function setupEventListeners() {
   elements.closeModal?.addEventListener('click', closeQuickAddModal);
   elements.modalForm?.addEventListener('submit', handleModalSubmit);
 
-  // Close modal on outside click
+  // Close modals on outside click
   window.addEventListener('click', (e) => {
-    if (e.target === elements.quickAddModal) {
-      closeQuickAddModal();
-    }
+    if (e.target === elements.quickAddModal) closeQuickAddModal();
+    if (e.target === elements.addBudgetModal) closeBudgetModal();
+    if (e.target === elements.addGoalModal) closeGoalModal();
   });
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeQuickAddModal();
+      closeBudgetModal();
+      closeGoalModal();
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
       e.preventDefault();
@@ -303,7 +359,7 @@ function handleNavigation(e) {
 
 function switchPage(page) {
   // Update active nav link
-  elements.navLinks.forEach(link => {
+  elements.navLinks.forEach((link) => {
     const li = link.parentElement;
     if (link.dataset.page === page) {
       li.classList.add('active');
@@ -313,7 +369,7 @@ function switchPage(page) {
   });
 
   // Update page visibility
-  elements.pages.forEach(p => {
+  elements.pages.forEach((p) => {
     if (p.id === page) {
       p.classList.add('active');
     } else {
@@ -323,13 +379,13 @@ function switchPage(page) {
 
   // Update page title
   const titles = {
-    'dashboard': 'Dashboard',
-    'transactions': 'Transactions',
-    'analytics': 'Analytics',
-    'budget': 'Budget Planner',
-    'goals': 'Savings Goals',
-    'reports': 'Financial Reports',
-    'settings': 'Settings'
+    dashboard: 'Dashboard',
+    transactions: 'Transactions',
+    analytics: 'Analytics',
+    budget: 'Budget Planner',
+    goals: 'Savings Goals',
+    reports: 'Financial Reports',
+    settings: 'Settings'
   };
 
   elements.pageTitle.textContent = titles[page] || 'Dashboard';
@@ -449,9 +505,44 @@ function handleQuickAdd(e) {
 
 // ========== MODAL FUNCTIONS ==========
 function openQuickAddModal() {
+  editingTransactionId = null;
+  const modalTitle = elements.quickAddModal?.querySelector('.modal-header h3');
+  const submitBtn = elements.modalSubmitBtn;
+
+  if (modalTitle) modalTitle.textContent = 'Add Transaction';
+  if (submitBtn) {
+    submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Transaction';
+  }
+
   elements.quickAddModal?.classList.add('show');
   setDefaultDates();
 }
+
+function openEditModal(id) {
+  const transaction = transactions.find((t) => t.id === id);
+  if (!transaction) return;
+
+  editingTransactionId = id;
+
+  const modalTitle = elements.quickAddModal?.querySelector('.modal-header h3');
+  const submitBtn = elements.modalSubmitBtn;
+
+  if (modalTitle) modalTitle.textContent = 'Edit Transaction';
+  if (submitBtn) {
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+  }
+
+  // Populate form fields
+  if (elements.modalTitle) elements.modalTitle.value = transaction.title;
+  if (elements.modalAmount) elements.modalAmount.value = transaction.amount;
+  if (elements.modalType) elements.modalType.value = transaction.type;
+  if (elements.modalCategory) elements.modalCategory.value = transaction.category;
+  if (elements.modalDate) elements.modalDate.value = transaction.date;
+  if (elements.modalPayment) elements.modalPayment.value = transaction.paymentMethod || 'cash';
+
+  elements.quickAddModal?.classList.add('show');
+}
+window.openEditModal = openEditModal;
 
 function closeQuickAddModal() {
   elements.quickAddModal?.classList.remove('show');
@@ -477,35 +568,269 @@ function handleModalSubmit(e) {
     return;
   }
 
-  const transaction = {
-    id: Date.now(),
-    title,
-    amount,
-    type,
-    category,
-    date,
-    paymentMethod: payment,
-    timestamp: new Date().toISOString()
-  };
+  if (editingTransactionId) {
+    // Edit existing transaction
+    const index = transactions.findIndex((t) => t.id === editingTransactionId);
+    if (index !== -1) {
+      transactions[index] = {
+        ...transactions[index],
+        title,
+        amount,
+        type,
+        category,
+        date,
+        paymentMethod: payment
+      };
+      showToast('Transaction updated!', 'success');
+    }
+  } else {
+    // Add new transaction
+    const transaction = {
+      id: Date.now(),
+      title,
+      amount,
+      type,
+      category,
+      date,
+      paymentMethod: payment,
+      timestamp: new Date().toISOString()
+    };
+    transactions.push(transaction);
+    showToast('Transaction added!', 'success');
+  }
 
-  transactions.push(transaction);
   saveData();
 
   closeQuickAddModal();
   elements.modalForm.reset();
   setDefaultDates();
 
-  showToast('Transaction added!', 'success');
-
-  if (type === 'income' && amount > 5000) {
+  if (type === 'income' && amount > 5000 && !editingTransactionId) {
     playConfetti();
   }
 }
 
+// ========== BUDGET & GOAL MODAL FUNCTIONS ==========
+function openBudgetModal() {
+  elements.addBudgetModal?.classList.add('show');
+}
+
+function closeBudgetModal() {
+  elements.addBudgetModal?.classList.remove('show');
+}
+
+function handleBudgetSubmit(e) {
+  e.preventDefault();
+  const category = elements.budgetCategory?.value;
+  const amount = parseFloat(elements.budgetAmount?.value);
+
+  if (!category || !amount || amount <= 0) {
+    showToast('Please enter valid category and amount', 'error');
+    return;
+  }
+
+  const existingIndex = budgets.findIndex((b) => b.category === category);
+  if (existingIndex >= 0) {
+    budgets[existingIndex].amount = amount;
+  } else {
+    budgets.push({ id: Date.now(), category, amount });
+  }
+
+  saveData();
+  closeBudgetModal();
+  elements.budgetForm?.reset();
+  showToast('Budget saved!', 'success');
+}
+
+function openGoalModal() {
+  elements.addGoalModal?.classList.add('show');
+}
+
+function closeGoalModal() {
+  elements.addGoalModal?.classList.remove('show');
+}
+
+function handleGoalSubmit(e) {
+  e.preventDefault();
+  const title = elements.goalTitle?.value.trim();
+  const amount = parseFloat(elements.goalAmount?.value);
+  const icon = elements.goalIcon?.value;
+
+  if (!title || !amount || amount <= 0 || !icon) {
+    showToast('Please fill all fields correctly', 'error');
+    return;
+  }
+
+  goals.push({ id: Date.now(), title, amount, icon });
+  saveData();
+  closeGoalModal();
+  elements.goalForm?.reset();
+  showToast('Goal added!', 'success');
+}
+
+// ========== RENDER BUDGETS & GOALS ==========
+function renderBudgets() {
+  const container = elements.budgetList;
+  if (!container) return;
+
+  if (budgets.length === 0) {
+    container.innerHTML =
+      '<div class="empty-state"><i class="fas fa-wallet"></i><p>No budgets set. Create one!</p></div>';
+    if (elements.totalBudgetProgress) elements.totalBudgetProgress.style.width = '0%';
+    if (elements.budgetSpent) elements.budgetSpent.textContent = `${CONFIG.CURRENCY}0 spent`;
+    if (elements.budgetRemaining) elements.budgetRemaining.textContent = `${CONFIG.CURRENCY}0`;
+    if (elements.totalBudgetValue) elements.totalBudgetValue.textContent = `${CONFIG.CURRENCY}0`;
+    return;
+  }
+
+  let totalBudgetAmount = 0;
+  let totalSpentAmount = 0;
+
+  const now = new Date();
+
+  const html = budgets
+    .map((budget) => {
+      totalBudgetAmount += budget.amount;
+
+      // Calculate spent for this category this month
+      const spent = transactions
+        .filter(
+          (t) =>
+            t.type === 'expense' &&
+            t.category === budget.category &&
+            new Date(t.date).getMonth() === now.getMonth() &&
+            new Date(t.date).getFullYear() === now.getFullYear()
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      totalSpentAmount += spent;
+      const progress = Math.min((spent / budget.amount) * 100, 100);
+
+      return `
+      <div class="budget-item">
+        <div class="budget-header">
+          <span class="budget-category">${budget.category}</span>
+          <div class="budget-actions">
+            <button class="budget-delete" onclick="deleteBudget(${budget.id})"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="budget-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${progress}%; background: ${progress > 90 ? 'var(--danger)' : 'var(--primary)'}"></div>
+          </div>
+        </div>
+        <div class="budget-stats">
+          <span>${CONFIG.CURRENCY}${formatNumber(spent)}</span>
+          <span>of ${CONFIG.CURRENCY}${formatNumber(budget.amount)}</span>
+        </div>
+      </div>
+    `;
+    })
+    .join('');
+
+  container.innerHTML = html;
+
+  // Update summary
+  const totalProgress = Math.min((totalSpentAmount / totalBudgetAmount) * 100, 100);
+  if (elements.totalBudgetProgress) elements.totalBudgetProgress.style.width = `${totalProgress}%`;
+  if (elements.budgetSpent)
+    elements.budgetSpent.textContent = `${CONFIG.CURRENCY}${formatNumber(totalSpentAmount)} spent`;
+  if (elements.budgetRemaining)
+    elements.budgetRemaining.textContent = `${CONFIG.CURRENCY}${formatNumber(Math.max(0, totalBudgetAmount - totalSpentAmount))}`;
+  if (elements.totalBudgetValue)
+    elements.totalBudgetValue.textContent = `${CONFIG.CURRENCY}${formatNumber(totalBudgetAmount)}`;
+  if (elements.monthlyBudgetLeft)
+    elements.monthlyBudgetLeft.textContent = `${CONFIG.CURRENCY}${formatNumber(Math.max(0, totalBudgetAmount - totalSpentAmount))}`;
+}
+
+function deleteBudget(id) {
+  if (confirm('Delete this budget?')) {
+    budgets = budgets.filter((b) => b.id !== id);
+    saveData();
+  }
+}
+window.deleteBudget = deleteBudget;
+
+function renderGoals() {
+  const container = elements.goalsList;
+  if (!container) return;
+
+  if (goals.length === 0) {
+    container.innerHTML =
+      '<div class="empty-state" style="grid-column: 1/-1"><i class="fas fa-bullseye"></i><p>No goals set. Create one!</p></div>';
+    if (elements.goalProgressText)
+      elements.goalProgressText.textContent = `${CONFIG.CURRENCY}0 / ${CONFIG.CURRENCY}0`;
+    if (elements.goalPercentage) elements.goalPercentage.textContent = `0%`;
+    if (elements.goalProgress) elements.goalProgress.style.width = `0%`;
+    return;
+  }
+
+  const totals = calculateTotals();
+  const totalSavings = Math.max(0, totals.balance);
+
+  let totalGoalAmount = 0;
+
+  const html = goals
+    .map((goal) => {
+      totalGoalAmount += goal.amount;
+
+      // Allocate savings proportionally
+      const totalAllGoals = goals.reduce((s, g) => s + g.amount, 0);
+      const portion = goal.amount / totalAllGoals;
+      const allocatedSavings = Math.min(totalSavings * portion, goal.amount);
+      const progress = Math.min((allocatedSavings / goal.amount) * 100, 100);
+
+      const icons = {
+        emergency: 'fa-shield-alt',
+        vacation: 'fa-umbrella-beach',
+        car: 'fa-car',
+        home: 'fa-home'
+      };
+
+      return `
+      <div class="goal-card">
+        <div class="goal-icon ${goal.icon}">
+          <i class="fas ${icons[goal.icon] || 'fa-bullseye'}"></i>
+        </div>
+        <div class="goal-details">
+          <h4>${escapeHtml(goal.title)}</h4>
+          <p>${CONFIG.CURRENCY}${formatNumber(allocatedSavings)} of ${CONFIG.CURRENCY}${formatNumber(goal.amount)}</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${progress}%"></div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem">
+           <span class="goal-percentage">${Math.round(progress)}%</span>
+           <button class="delete-btn" onclick="deleteGoal(${goal.id})"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `;
+    })
+    .join('');
+
+  container.innerHTML = html;
+
+  // Update Monthly Goal Sidebar
+  const sidebarProgress = Math.min((totalSavings / totalGoalAmount) * 100, 100);
+  if (elements.goalProgressText)
+    elements.goalProgressText.textContent = `${CONFIG.CURRENCY}${formatNumber(totalSavings)} / ${CONFIG.CURRENCY}${formatNumber(totalGoalAmount)}`;
+  if (elements.goalPercentage)
+    elements.goalPercentage.textContent = `${Math.round(sidebarProgress)}%`;
+  if (elements.goalProgress) elements.goalProgress.style.width = `${sidebarProgress}%`;
+}
+
+function deleteGoal(id) {
+  if (confirm('Delete this goal?')) {
+    goals = goals.filter((g) => g.id !== id);
+    saveData();
+  }
+}
+window.deleteGoal = deleteGoal;
+
 // ========== DELETE TRANSACTION ==========
 function deleteTransaction(id) {
   if (confirm('Delete this transaction?')) {
-    transactions = transactions.filter(t => t.id !== id);
+    transactions = transactions.filter((t) => t.id !== id);
     saveData();
     showToast('Transaction deleted', 'success');
   }
@@ -513,6 +838,7 @@ function deleteTransaction(id) {
 
 // ========== UPDATE UI ==========
 function updateUI() {
+  updateProfileUI();
   // Calculate totals
   const totals = calculateTotals();
 
@@ -524,19 +850,24 @@ function updateUI() {
 
   // Today's spending
   const today = new Date().toISOString().split('T')[0];
-  const todayExpenses = transactions.filter(t => t.type === 'expense' && t.date === today)
+  const todayExpenses = transactions
+    .filter((t) => t.type === 'expense' && t.date === today)
     .reduce((sum, t) => sum + t.amount, 0);
   elements.todaySpending.textContent = `${CONFIG.CURRENCY}${formatNumber(todayExpenses)}`;
 
   // Monthly budget (example)
   const monthlyBudget = 50000;
-  const monthlyExpenses = transactions.filter(t => {
-    const date = new Date(t.date);
-    const now = new Date();
-    return t.type === 'expense' &&
-      date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear();
-  }).reduce((sum, t) => sum + t.amount, 0);
+  const monthlyExpenses = transactions
+    .filter((t) => {
+      const date = new Date(t.date);
+      const now = new Date();
+      return (
+        t.type === 'expense' &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear()
+      );
+    })
+    .reduce((sum, t) => sum + t.amount, 0);
 
   elements.monthlyBudgetLeft.textContent = `${CONFIG.CURRENCY}${formatNumber(monthlyBudget - monthlyExpenses)}`;
 
@@ -545,8 +876,9 @@ function updateUI() {
 }
 
 function calculateTotals() {
-  let income = 0, expense = 0;
-  transactions.forEach(t => {
+  let income = 0,
+    expense = 0;
+  transactions.forEach((t) => {
     if (t.type === 'income') income += t.amount;
     else expense += t.amount;
   });
@@ -562,9 +894,7 @@ function renderRecentTransactions() {
   const list = elements.recentTransactionsList;
   if (!list) return;
 
-  const recent = [...transactions]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
+  const recent = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
   if (recent.length === 0) {
     list.innerHTML = '';
@@ -578,10 +908,10 @@ function renderRecentTransactions() {
     elements.dashboardEmptyState.style.display = 'none';
   }
 
-  list.innerHTML = recent.map(t => createTransactionHTML(t)).join('');
+  list.innerHTML = recent.map((t) => createTransactionHTML(t)).join('');
 
   // Add delete handlers
-  document.querySelectorAll('.delete-btn').forEach(btn => {
+  document.querySelectorAll('.delete-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = parseInt(btn.dataset.id);
       deleteTransaction(id);
@@ -608,9 +938,14 @@ function createTransactionHTML(t) {
                 <span class="transaction-amount ${t.type}">
                     ${isIncome ? '+' : '-'} ${CONFIG.CURRENCY}${formatNumber(t.amount)}
                 </span>
-                <button class="delete-btn" data-id="${t.id}">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="action-btns">
+                    <button class="edit-btn" onclick="openEditModal(${t.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-btn" data-id="${t.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -624,7 +959,7 @@ function escapeHtml(text) {
     '"': '&quot;',
     "'": '&#039;'
   };
-  return String(text).replace(/[&<>"']/g, m => map[m]);
+  return String(text).replace(/[&<>"']/g, (m) => map[m]);
 }
 
 // ========== TRANSACTIONS TABLE ==========
@@ -644,17 +979,18 @@ function renderTransactionsTable(transactionsToRender) {
     return;
   }
 
-  tbody.innerHTML = transactionsToRender.map(t => {
-    const isIncome = t.type === 'income';
-    const formattedDate = new Date(t.date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+  tbody.innerHTML = transactionsToRender
+    .map((t) => {
+      const isIncome = t.type === 'income';
+      const formattedDate = new Date(t.date).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
 
-    return `
+      return `
             <tr>
-                <td>
+                <td data-label="Transaction">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <div class="transaction-icon ${t.type}" style="width: 32px; height: 32px; font-size: 0.8rem;">
                             <i class="fas ${isIncome ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
@@ -664,23 +1000,29 @@ function renderTransactionsTable(transactionsToRender) {
                         </div>
                     </div>
                 </td>
-                <td>${t.category}</td>
-                <td>${formattedDate}</td>
-                <td>${t.paymentMethod || 'cash'}</td>
-                <td style="color: ${isIncome ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
+                <td data-label="Category">${t.category}</td>
+                <td data-label="Date">${formattedDate}</td>
+                <td data-label="Payment">${t.paymentMethod || 'cash'}</td>
+                <td data-label="Amount" style="color: ${isIncome ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
                     ${isIncome ? '+' : '-'} ${CONFIG.CURRENCY}${formatNumber(t.amount)}
                 </td>
-                <td>
-                    <button class="delete-btn" data-id="${t.id}" style="background: none; border: none; cursor: pointer;">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                <td data-label="Actions">
+                    <div class="action-btns">
+                        <button class="edit-btn" onclick="openEditModal(${t.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" data-id="${t.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
-  }).join('');
+    })
+    .join('');
 
   // Add delete handlers
-  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+  tbody.querySelectorAll('.delete-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = parseInt(btn.dataset.id);
       deleteTransaction(id);
@@ -695,9 +1037,8 @@ function handleSearch(e) {
   if (!query) {
     filteredTransactions = [...transactions];
   } else {
-    filteredTransactions = transactions.filter(t =>
-      t.title.toLowerCase().includes(query) ||
-      t.category.toLowerCase().includes(query)
+    filteredTransactions = transactions.filter(
+      (t) => t.title.toLowerCase().includes(query) || t.category.toLowerCase().includes(query)
     );
   }
 
@@ -713,15 +1054,15 @@ function applyFilters() {
   const date = elements.filterDate?.value;
 
   if (type && type !== 'all') {
-    filtered = filtered.filter(t => t.type === type);
+    filtered = filtered.filter((t) => t.type === type);
   }
 
   if (category && category !== 'all') {
-    filtered = filtered.filter(t => t.category === category);
+    filtered = filtered.filter((t) => t.category === category);
   }
 
   if (date) {
-    filtered = filtered.filter(t => t.date === date);
+    filtered = filtered.filter((t) => t.date === date);
   }
 
   // Update count
@@ -797,23 +1138,22 @@ function updatePieChart() {
   const now = new Date();
 
   if (period === 'month') {
-    filtered = transactions.filter(t => {
+    filtered = transactions.filter((t) => {
       const date = new Date(t.date);
-      return date.getMonth() === now.getMonth() &&
-        date.getFullYear() === now.getFullYear();
+      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
     });
   } else if (period === 'year') {
-    filtered = transactions.filter(t => {
+    filtered = transactions.filter((t) => {
       const date = new Date(t.date);
       return date.getFullYear() === now.getFullYear();
     });
   }
 
   // Get expenses by category
-  const expenses = filtered.filter(t => t.type === 'expense');
+  const expenses = filtered.filter((t) => t.type === 'expense');
   const categories = {};
 
-  expenses.forEach(e => {
+  expenses.forEach((e) => {
     categories[e.category] = (categories[e.category] || 0) + e.amount;
   });
 
@@ -824,26 +1164,39 @@ function updatePieChart() {
   if (Object.keys(categories).length === 0) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.font = '14px Inter';
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--gray-500').trim();
+    ctx.fillStyle = getComputedStyle(document.documentElement)
+      .getPropertyValue('--gray-500')
+      .trim();
     ctx.textAlign = 'center';
     ctx.fillText('No expense data', ctx.canvas.width / 2, ctx.canvas.height / 2);
     return;
   }
 
   // Colors
-  const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+  const colors = [
+    '#6366f1',
+    '#10b981',
+    '#f59e0b',
+    '#ef4444',
+    '#8b5cf6',
+    '#ec4899',
+    '#14b8a6',
+    '#f97316'
+  ];
 
   // Create chart
   charts.pie = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: Object.keys(categories),
-      datasets: [{
-        data: Object.values(categories),
-        backgroundColor: colors.slice(0, Object.keys(categories).length),
-        borderWidth: 0,
-        borderRadius: 8
-      }]
+      datasets: [
+        {
+          data: Object.values(categories),
+          backgroundColor: colors.slice(0, Object.keys(categories).length),
+          borderWidth: 0,
+          borderRadius: 8
+        }
+      ]
     },
     options: {
       responsive: true,
@@ -882,9 +1235,10 @@ function updateBarChart() {
     const monthYear = date.toLocaleDateString('en-IN', { month: 'short' });
     labels.push(monthYear);
 
-    let income = 0, expense = 0;
+    let income = 0,
+      expense = 0;
 
-    transactions.forEach(t => {
+    transactions.forEach((t) => {
       const tDate = new Date(t.date);
       if (tDate.getMonth() === date.getMonth() && tDate.getFullYear() === date.getFullYear()) {
         if (t.type === 'income') income += t.amount;
@@ -957,9 +1311,10 @@ function updateAnalyticsChart() {
     labels.push(label);
 
     const dateStr = date.toISOString().split('T')[0];
-    let income = 0, expense = 0;
+    let income = 0,
+      expense = 0;
 
-    transactions.forEach(t => {
+    transactions.forEach((t) => {
       if (t.date === dateStr) {
         if (t.type === 'income') income += t.amount;
         else expense += t.amount;
@@ -1026,12 +1381,12 @@ function updateAnalytics() {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - range);
 
-  const periodTransactions = transactions.filter(t => {
+  const periodTransactions = transactions.filter((t) => {
     return new Date(t.date) >= startDate;
   });
 
   const totalExpense = periodTransactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const avgDaily = totalExpense / range;
@@ -1039,12 +1394,13 @@ function updateAnalytics() {
 
   // Find most active day
   const dayCount = {};
-  transactions.forEach(t => {
+  transactions.forEach((t) => {
     const day = new Date(t.date).toLocaleDateString('en-IN', { weekday: 'long' });
     dayCount[day] = (dayCount[day] || 0) + 1;
   });
 
-  let maxDay = 'Sunday', maxCount = 0;
+  let maxDay = 'Sunday',
+    maxCount = 0;
   Object.entries(dayCount).forEach(([day, count]) => {
     if (count > maxCount) {
       maxCount = count;
@@ -1057,11 +1413,14 @@ function updateAnalytics() {
 
   // Find top category
   const categoryExpense = {};
-  transactions.filter(t => t.type === 'expense').forEach(t => {
-    categoryExpense[t.category] = (categoryExpense[t.category] || 0) + t.amount;
-  });
+  transactions
+    .filter((t) => t.type === 'expense')
+    .forEach((t) => {
+      categoryExpense[t.category] = (categoryExpense[t.category] || 0) + t.amount;
+    });
 
-  let topCat = 'Other', topAmount = 0;
+  let topCat = 'Other',
+    topAmount = 0;
   Object.entries(categoryExpense).forEach(([cat, amount]) => {
     if (amount > topAmount) {
       topAmount = amount;
@@ -1074,9 +1433,8 @@ function updateAnalytics() {
 
   // Calculate savings rate
   const totals = calculateTotals();
-  const savingsRate = totals.income > 0
-    ? ((totals.income - totals.expense) / totals.income * 100).toFixed(1)
-    : 0;
+  const savingsRate =
+    totals.income > 0 ? (((totals.income - totals.expense) / totals.income) * 100).toFixed(1) : 0;
   elements.savingsRateAnalytics.textContent = `${savingsRate}%`;
 
   // Update category analysis
@@ -1093,10 +1451,12 @@ function updateCategoryAnalysis() {
   const categoryExpense = {};
   let total = 0;
 
-  transactions.filter(t => t.type === 'expense').forEach(t => {
-    categoryExpense[t.category] = (categoryExpense[t.category] || 0) + t.amount;
-    total += t.amount;
-  });
+  transactions
+    .filter((t) => t.type === 'expense')
+    .forEach((t) => {
+      categoryExpense[t.category] = (categoryExpense[t.category] || 0) + t.amount;
+      total += t.amount;
+    });
 
   const sorted = Object.entries(categoryExpense)
     .sort((a, b) => b[1] - a[1])
@@ -1104,9 +1464,10 @@ function updateCategoryAnalysis() {
 
   const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-  container.innerHTML = sorted.map(([category, amount], index) => {
-    const percent = ((amount / total) * 100).toFixed(1);
-    return `
+  container.innerHTML = sorted
+    .map(([category, amount], index) => {
+      const percent = ((amount / total) * 100).toFixed(1);
+      return `
             <div class="category-item">
                 <span class="category-color" style="background: ${colors[index]}"></span>
                 <div class="category-info">
@@ -1118,7 +1479,8 @@ function updateCategoryAnalysis() {
                 </div>
             </div>
         `;
-  }).join('');
+    })
+    .join('');
 }
 
 // ========== INSIGHTS ==========
@@ -1152,17 +1514,20 @@ function generateInsights() {
   if (expenseRatio > 0.7) {
     insights.push({
       icon: 'fa-exclamation-triangle',
-      text: 'You\'re spending more than 70% of your income'
+      text: "You're spending more than 70% of your income"
     });
   }
 
   // Top category
   const categoryExpense = {};
-  transactions.filter(t => t.type === 'expense').forEach(t => {
-    categoryExpense[t.category] = (categoryExpense[t.category] || 0) + t.amount;
-  });
+  transactions
+    .filter((t) => t.type === 'expense')
+    .forEach((t) => {
+      categoryExpense[t.category] = (categoryExpense[t.category] || 0) + t.amount;
+    });
 
-  let topCat = 'Other', topAmount = 0;
+  let topCat = 'Other',
+    topAmount = 0;
   Object.entries(categoryExpense).forEach(([cat, amount]) => {
     if (amount > topAmount) {
       topAmount = amount;
@@ -1177,22 +1542,26 @@ function generateInsights() {
     });
   }
 
-  container.innerHTML = insights.map(insight => `
+  container.innerHTML = insights
+    .map(
+      (insight) => `
         <div class="insight-item">
             <i class="fas ${insight.icon}"></i>
             <p>${insight.text}</p>
         </div>
-    `).join('');
+    `
+    )
+    .join('');
 }
 
 // ========== GOAL PROGRESS ==========
 function updateGoalProgress() {
   const totals = calculateTotals();
-  const goal = 50000; // Monthly savings goal
-  const progress = Math.min((totals.balance / goal) * 100, 100);
+  const totalGoalAmount = goals.reduce((sum, g) => sum + g.amount, 0) || 50000; // Use sum of goals or fallback to 50000 if empty
+  const progress = Math.min((totals.balance / totalGoalAmount) * 100, 100) || 0;
 
   if (elements.goalProgressText) {
-    elements.goalProgressText.textContent = `${CONFIG.CURRENCY}${formatNumber(totals.balance)} / ${CONFIG.CURRENCY}${formatNumber(goal)}`;
+    elements.goalProgressText.textContent = `${CONFIG.CURRENCY}${formatNumber(Math.max(0, totals.balance))} / ${CONFIG.CURRENCY}${formatNumber(totalGoalAmount)}`;
   }
 
   if (elements.goalPercentage) {
@@ -1237,8 +1606,27 @@ function saveProfile() {
   const email = elements.displayEmail?.value;
 
   if (name && email) {
+    profile = { name, email };
+    saveData();
+    updateProfileUI();
     showToast('Profile updated!', 'success');
+  } else {
+    showToast('Please enter name and email', 'error');
   }
+}
+
+function updateProfileUI() {
+  if (elements.sidebarUserName) elements.sidebarUserName.textContent = profile.name || 'User';
+  if (elements.sidebarUserEmail)
+    elements.sidebarUserEmail.textContent = profile.email || 'user@example.com';
+  if (elements.welcomeName)
+    elements.welcomeName.textContent = `Welcome back, ${profile.name.split(' ')[0] || 'User'}! 👋`;
+  if (elements.sidebarAvatar) {
+    const encodedName = encodeURIComponent(profile.name || 'User');
+    elements.sidebarAvatar.src = `https://ui-avatars.com/api/?name=${encodedName}&background=6366f1&color=fff&size=60&bold=true`;
+  }
+  if (elements.displayName) elements.displayName.value = profile.name || '';
+  if (elements.displayEmail) elements.displayEmail.value = profile.email || '';
 }
 
 // ========== EXPORT / IMPORT ==========
@@ -1249,7 +1637,7 @@ function exportToCSV() {
   }
 
   const headers = ['Title', 'Amount (₹)', 'Type', 'Category', 'Date', 'Payment Method'];
-  const rows = transactions.map(t => [
+  const rows = transactions.map((t) => [
     t.title,
     t.amount.toFixed(2),
     t.type,
@@ -1259,8 +1647,8 @@ function exportToCSV() {
   ]);
 
   let csv = headers.join(',') + '\n';
-  rows.forEach(row => {
-    csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+  rows.forEach((row) => {
+    csv += row.map((cell) => `"${cell}"`).join(',') + '\n';
   });
 
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1331,7 +1719,11 @@ function importFromJSON() {
       try {
         const data = JSON.parse(event.target.result);
         if (data.transactions && Array.isArray(data.transactions)) {
-          if (confirm(`Import ${data.transactions.length} transactions? This will replace existing data.`)) {
+          if (
+            confirm(
+              `Import ${data.transactions.length} transactions? This will replace existing data.`
+            )
+          ) {
             transactions = data.transactions;
             saveData();
             showToast('Data imported successfully!', 'success');
@@ -1395,7 +1787,10 @@ function playConfetti() {
       const animation = confetti.animate(
         [
           { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
-          { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+          {
+            transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`,
+            opacity: 0
+          }
         ],
         {
           duration: 2000 + Math.random() * 1000,

@@ -1,72 +1,105 @@
-
-# Personal Finance Dashboard
+# WealthWise | Modern Personal Finance Dashboard
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Vite](https://img.shields.io/badge/Vite-6.0.0-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Chart.js](https://img.shields.io/badge/Chart.js-4.5.1-FF6384?logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
+[![PWA](https://img.shields.io/badge/PWA-Enabled-00A3E0?logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 
-A **web-based Personal Finance Dashboard** to help you **track income, expenses, and savings** with interactive charts and easy-to-use interface.
-
----
-
-## 🌟 Features
-
-- ✅ Track daily, weekly, and monthly income and expenses.
-- ✅ Add, edit, and delete transactions.
-- ✅ Visual charts (bar/pie) for expense analysis.
-- ✅ Responsive and mobile-friendly design.
-- ✅ Search, filter, and sort transactions.
-- ✅ Dark mode toggle.
-- ✅ Save data locally using `LocalStorage`.
+**WealthWise** is a high-performance, responsive personal finance dashboard built with modern web technologies. It provides a comprehensive suite of tools to manage your finances, track spending patterns, and visualize your financial health in real-time.
 
 ---
 
-## 💻 Live Demo
+## 🌟 Key Features
 
-Experience the project live on Netlify:
+- **📊 Dynamic Analytics:** Real-time financial insights with interactive Chart.js visualizations (Doughnut, Bar, and Line charts).
+- **📝 Full CRUD Transactions:** Comprehensive transaction management with "Add," "Edit," and "Delete" capabilities across all pages.
+- **📱 PWA Ready:** Progressive Web App support for an "app-like" experience on mobile and desktop, including offline capabilities.
+- **🌓 Adaptive Theme:** Seamless transition between Light and Dark modes with persistent user preferences.
+- **📁 Data Management:** Export your financial history to CSV or JSON, and import backups to restore your data.
+- **📈 Goal & Budget Tracking:** Set monthly budgets by category and track savings goals with visual progress indicators.
+- **🤖 AI-Powered Insights:** Smart notifications and insights based on your spending habits and savings rate.
 
-👉 **https://financee-dashboard.netlify.app/**
+---
 
+## 🛠 Tech Stack
 
-## 🛠 Technologies Used
+- **Core:** JavaScript (ES6+), HTML5, Vanilla CSS3
+- **Build Tool:** [Vite 6](https://vitejs.dev/)
+- **Visuals:** [Chart.js](https://www.chartjs.org/) for data visualization
+- **Icons:** [Font Awesome 6](https://fontawesome.com/)
+- **Storage:** Browser `LocalStorage` for persistent data (No database required)
+- **Deployment:** Optimized for Vercel/Netlify with PWA support
 
-- **HTML5** – Structure of the dashboard  
-- **CSS3** – Styling and responsive layout  
-- **JavaScript (ES6)** – Dynamic functionality  
-- **Chart.js** – Interactive charts (bar/pie)  
-- **LocalStorage API** – Save user data in the browser
+---
 
-## 📂 Folder Structure
+## 🚀 Quick Start
 
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/mdtanveer0786/finance-dashboard.git
+   cd finance-dashboard
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for production:**
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 📂 Project Structure
+
+```text
 personal-finance-dashboard/
-├─ index.html
-├─ style.css
-├─ script.js
-├─ README.md
-├─ screenshots/
-│ ├─ dashboard.png
-│ └─ charts.png
-├─ assets/
-│ ├─ icons/
-│ └─ images/
+├── dist/                # Optimized production build
+├── node_modules/        # Project dependencies
+├── src/
+│   ├── main.js         # Core application logic & state management
+│   └── style.css       # Comprehensive dashboard styling (Light/Dark)
+├── index.html          # Main entry point
+├── package.json        # Build scripts and dependencies
+├── vite.config.js      # Vite & PWA configuration
+└── README.md           # Project documentation
+```
 
 ---
-
-## 📸 Screenshots
-
-![Dashboard Screenshot](screenshots/dashboard.png)  
-![Charts Screenshot](screenshots/charts.png)
-
-> Replace these images with actual screenshots from your project. Put them in a `screenshots` folder.
 
 ## 🤝 Contributing
 
-Pull requests are welcome.  
-For major changes, please open an issue first.
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
 ## 📝 License
 
-This project is licensed under the **MIT License**
+This project is licensed under the **MIT License** - see the [LICENSE](https://opensource.org/licenses/MIT) page for details.
+
+---
+
+## 👨‍💻 Author
+
+**Md Tanveer**
+- GitHub: [@mdtanveer0786](https://github.com/mdtanveer0786)
+- Website: [WealthWise Live Demo](https://financee-dashboard.netlify.app/)
